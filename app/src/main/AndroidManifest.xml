@@ -11,6 +11,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Gemma4Chat">
 
+        <uses-native-library
+            android:name="libOpenCL.so"
+            android:required="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

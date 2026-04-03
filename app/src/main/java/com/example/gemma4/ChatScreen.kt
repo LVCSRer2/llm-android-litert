@@ -54,7 +54,9 @@ import com.example.gemma4.ui.theme.ModelBubble
 import com.example.gemma4.ui.theme.ModelText
 import com.example.gemma4.ui.theme.UserBubble
 import com.example.gemma4.ui.theme.UserText
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -167,23 +169,25 @@ fun ChatScreen(chatViewModel: ChatViewModel = viewModel(), onOpenSettings: () ->
 @Composable
 fun MemoryOverlay(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    var nativeHeapMb by remember { mutableLongStateOf(0L) }
+    var pssMb by remember { mutableLongStateOf(0L) }
     var availableRamMb by remember { mutableLongStateOf(0L) }
-    var appRssMb by remember { mutableLongStateOf(0L) }
+    var nativeHeapMb by remember { mutableLongStateOf(0L) }
 
     LaunchedEffect(Unit) {
         while (true) {
-            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            val memInfo = ActivityManager.MemoryInfo()
-            am.getMemoryInfo(memInfo)
-            availableRamMb = memInfo.availMem / (1024 * 1024)
+            withContext(Dispatchers.IO) {
+                val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                val memInfo = ActivityManager.MemoryInfo()
+                am.getMemoryInfo(memInfo)
+                availableRamMb = memInfo.availMem / (1024 * 1024)
 
-            nativeHeapMb = Debug.getNativeHeapAllocatedSize() / (1024 * 1024)
+                // PSS: 공유 메모리 포함 실제 점유량 (mmap 모델 포함)
+                val debugMemInfo = Debug.MemoryInfo()
+                Debug.getMemoryInfo(debugMemInfo)
+                pssMb = debugMemInfo.totalPss / 1024L
 
-            val runtime = Runtime.getRuntime()
-            val javaHeapMb = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
-            appRssMb = javaHeapMb + nativeHeapMb
-
+                nativeHeapMb = Debug.getNativeHeapAllocatedSize() / (1024 * 1024)
+            }
             delay(1000)
         }
     }
@@ -195,7 +199,7 @@ fun MemoryOverlay(modifier: Modifier = Modifier) {
             .padding(horizontal = 8.dp, vertical = 6.dp)
     ) {
         Text(
-            text = "APP  ${appRssMb}MB",
+            text = "PSS  ${pssMb}MB",
             color = Color.Green,
             fontSize = 10.sp,
             fontFamily = FontFamily.Monospace,

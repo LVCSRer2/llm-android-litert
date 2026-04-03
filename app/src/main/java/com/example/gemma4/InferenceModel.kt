@@ -50,7 +50,7 @@ class InferenceModel private constructor(context: Context, modelFile: String) {
         engine = try {
             val gpuConfig = EngineConfig(modelPath = modelPath, backend = Backend.GPU())
             Engine(gpuConfig).also { it.initialize() }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.w(TAG, "GPU 초기화 실패, CPU로 전환: ${e.message}")
             val cpuConfig = EngineConfig(modelPath = modelPath, backend = Backend.CPU())
             Engine(cpuConfig).also { it.initialize() }

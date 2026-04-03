@@ -99,10 +99,14 @@ fun DownloadScreen(
                             context,
                             modelType,
                             hfToken,
-                            { p -> progress = p },
-                            { success, error ->
-                                isDownloading = false
-                                if (success) onDownloadComplete() else errorMessage = error
+                            onProgress = { p ->
+                                scope.launch { progress = p }
+                            },
+                            onFinished = { success, error ->
+                                scope.launch {
+                                    isDownloading = false
+                                    if (success) onDownloadComplete() else errorMessage = error
+                                }
                             }
                         )
                     }
