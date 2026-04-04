@@ -3,10 +3,12 @@ package com.example.gemma4
 import android.content.Context
 import android.util.Log
 import com.google.ai.edge.litertlm.Backend
+import com.google.ai.edge.litertlm.Content
 import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
+import com.google.ai.edge.litertlm.Message
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import java.io.File
@@ -71,6 +73,8 @@ class InferenceModel private constructor(context: Context, modelFile: String) {
 
     suspend fun generateResponse(
         message: String,
+        imageBytes: ByteArray? = null,
+        audioBytes: ByteArray? = null,
         onPartialResult: (String) -> Unit
     ) {
         val conv = conversation ?: throw IllegalStateException("대화가 초기화되지 않았습니다.")
@@ -79,7 +83,18 @@ class InferenceModel private constructor(context: Context, modelFile: String) {
         var firstTokenTime = 0L
         var tokenCount = 0
 
-        conv.sendMessageAsync(message)
+        val flow = if (imageBytes != null || audioBytes != null) {
+            val contentList = mutableListOf<Content>()
+            imageBytes?.let { contentList.add(Content.ImageBytes(it)) }
+            audioBytes?.let { contentList.add(Content.AudioBytes(it)) }
+            contentList.add(Content.Text(message))
+            val userMsg = Message.user(Contents.of(*contentList.toTypedArray()))
+            conv.sendMessageAsync(userMsg)
+        } else {
+            conv.sendMessageAsync(message)
+        }
+
+        flow
             .catch { e ->
                 Log.e(TAG, "생성 오류: ${e.message}")
                 throw e

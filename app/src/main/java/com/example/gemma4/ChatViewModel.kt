@@ -20,6 +20,16 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     var isModelLoading by mutableStateOf(false)
     val isModelLoaded: Boolean get() = inferenceModel != null
 
+    var attachedImageBytes: ByteArray? by mutableStateOf(null)
+        private set
+    var attachedAudioBytes: ByteArray? by mutableStateOf(null)
+        private set
+
+    fun attachImage(bytes: ByteArray) { attachedImageBytes = bytes }
+    fun attachAudio(bytes: ByteArray) { attachedAudioBytes = bytes }
+    fun clearImage() { attachedImageBytes = null }
+    fun clearAudio() { attachedAudioBytes = null }
+
     private var generationJob: Job? = null
     private var tokenCountJob: Job? = null
 
@@ -83,8 +93,19 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         val model = inferenceModel ?: return
         if (uiState.isGenerating) return
 
+        val imgBytes = attachedImageBytes
+        val audBytes = attachedAudioBytes
+        attachedImageBytes = null
+        attachedAudioBytes = null
+
         uiState.isGenerating = true
-        uiState.addUserMessage(userMessage)
+
+        val displayText = buildString {
+            if (imgBytes != null) appendLine("[이미지 첨부]")
+            if (audBytes != null) appendLine("[오디오 첨부]")
+            append(userMessage)
+        }
+        uiState.addUserMessage(displayText)
         uiState.addModelMessage(text = "", isLoading = true)
         uiState.inputTokenCount = 0
 
@@ -94,6 +115,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 model.generateResponse(
                     message = userMessage,
+                    imageBytes = imgBytes,
+                    audioBytes = audBytes,
                     onPartialResult = { partial ->
                         fullResponse.append(partial)
                         uiState.updateLastModelMessage(
