@@ -74,11 +74,21 @@ class InferenceModel private constructor(context: Context, modelFile: String) {
 
     fun createConversation(systemPrompt: String) {
         conversation?.close()
+        val fullPrompt = buildString {
+            append(systemPrompt)
+            if (!systemPrompt.contains("audio", ignoreCase = true)) {
+                append("\nWhen audio is provided, you can hear the speech content. Transcribe or respond to the audio directly.")
+            }
+            if (!systemPrompt.contains("image", ignoreCase = true) &&
+                !systemPrompt.contains("vision", ignoreCase = true)) {
+                append("\nWhen an image is provided, you can see and describe it.")
+            }
+        }
         val config = ConversationConfig(
-            systemInstruction = Contents.of(systemPrompt)
+            systemInstruction = Contents.of(fullPrompt)
         )
         conversation = engine.createConversation(config)
-        Log.i(TAG, "새 대화 세션 생성")
+        Log.i(TAG, "새 대화 세션 생성 (system prompt length: ${fullPrompt.length})")
     }
 
     suspend fun generateResponse(
