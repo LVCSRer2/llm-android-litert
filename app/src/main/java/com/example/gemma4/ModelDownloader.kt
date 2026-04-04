@@ -23,6 +23,13 @@ enum class ModelType(
         sizeMb = "~2.6GB",
         url = "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm",
         needsAuth = true
+    ),
+    GEMMA4_E4B(
+        fileName = "gemma-4-E4B-it.litertlm",
+        displayName = "Gemma 4 E4B (LiteRT-LM)",
+        sizeMb = "~3.7GB",
+        url = "https://huggingface.co/litert-community/gemma-4-E4B-it-litert-lm/resolve/main/gemma-4-E4B-it.litertlm",
+        needsAuth = true
     )
 }
 
