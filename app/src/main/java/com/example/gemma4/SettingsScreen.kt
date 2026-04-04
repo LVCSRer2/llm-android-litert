@@ -41,13 +41,14 @@ import kotlin.math.roundToInt
 fun SettingsScreen(
     currentSettings: ChatSettings,
     currentModel: ModelType,
-    onSave: (ChatSettings, Boolean) -> Unit,
+    onSave: (ChatSettings, ModelType) -> Unit,
     onBack: () -> Unit,
     onDownload: (ModelType) -> Unit = {}
 ) {
     val context = LocalContext.current
     var systemPrompt by remember { mutableStateOf(currentSettings.systemPrompt) }
     var maxTokens by remember { mutableIntStateOf(currentSettings.maxTokens) }
+    var selectedModel by remember { mutableStateOf(currentModel) }
     var deleteTarget by remember { mutableStateOf<ModelType?>(null) }
 
     deleteTarget?.let { modelType ->
@@ -91,7 +92,7 @@ fun SettingsScreen(
                             maxTokens = maxTokens
                         )
                         ChatSettings.save(context, newSettings)
-                        onSave(newSettings, false)
+                        onSave(newSettings, selectedModel)
                     }) {
                         Text("저장")
                     }
@@ -115,22 +116,22 @@ fun SettingsScreen(
 
             ModelType.entries.forEach { modelType ->
                 val isDownloaded = ModelDownloader.modelExists(context, modelType)
-                val isCurrentModel = modelType == currentModel
+                val isSelected = modelType == selectedModel
 
                 Card(
                     onClick = {
-                        if (!isDownloaded) onDownload(modelType)
+                        if (isDownloaded) selectedModel = modelType else onDownload(modelType)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isCurrentModel)
+                        containerColor = if (isSelected)
                             MaterialTheme.colorScheme.primaryContainer
                         else
                             MaterialTheme.colorScheme.surface
                     ),
-                    border = if (isCurrentModel)
+                    border = if (isSelected)
                         BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
                     else
                         BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
@@ -152,10 +153,10 @@ fun SettingsScreen(
                             if (isDownloaded) {
                                 Row {
                                     Text(
-                                        text = if (isCurrentModel) "사용 중" else "준비됨",
+                                        text = if (isSelected) "선택됨" else "준비됨",
                                         color = MaterialTheme.colorScheme.primary
                                     )
-                                    if (!isCurrentModel) {
+                                    if (modelType != currentModel) {
                                         TextButton(onClick = { deleteTarget = modelType }) {
                                             Text(
                                                 "삭제",

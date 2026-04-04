@@ -40,12 +40,12 @@ fun Gemma4ChatApp() {
             SettingsScreen(
                 currentSettings = chatViewModel.settings,
                 currentModel = chatViewModel.modelType,
-                onSave = { newSettings, reloadModel ->
+                onSave = { newSettings, selectedModel ->
                     if (!chatViewModel.isModelLoaded) {
                         chatViewModel.settings = newSettings
-                        chatViewModel.loadModel(chatViewModel.modelType)
+                        chatViewModel.loadModel(selectedModel)
                     } else {
-                        chatViewModel.updateSettings(newSettings, reloadModel)
+                        chatViewModel.updateSettings(newSettings, selectedModel)
                     }
                     navController.navigate("chat") {
                         popUpTo("settings") { inclusive = true }

@@ -55,14 +55,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updateSettings(newSettings: ChatSettings, reloadModel: Boolean) {
+    fun updateSettings(newSettings: ChatSettings, selectedModel: ModelType) {
         settings = newSettings
-        if (reloadModel) {
+        if (selectedModel != modelType) {
             uiState.clear()
             uiState.isGenerating = false
-            loadModel(modelType)
+            loadModel(selectedModel)
         } else {
-            // 시스템 프롬프트가 바뀌면 대화 세션 리셋
             inferenceModel?.resetSession(newSettings.systemPrompt)
         }
     }
