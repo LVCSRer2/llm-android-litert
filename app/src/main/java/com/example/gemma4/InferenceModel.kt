@@ -50,11 +50,21 @@ class InferenceModel private constructor(context: Context, modelFile: String) {
         Log.i(TAG, "LiteRT-LM 모델 로딩: $modelPath")
 
         engine = try {
-            val gpuConfig = EngineConfig(modelPath = modelPath, backend = Backend.GPU())
+            val gpuConfig = EngineConfig(
+                modelPath = modelPath,
+                backend = Backend.GPU(),
+                visionBackend = Backend.CPU(),
+                audioBackend = Backend.CPU()
+            )
             Engine(gpuConfig).also { it.initialize() }
         } catch (e: Throwable) {
             Log.w(TAG, "GPU 초기화 실패, CPU로 전환: ${e.message}")
-            val cpuConfig = EngineConfig(modelPath = modelPath, backend = Backend.CPU())
+            val cpuConfig = EngineConfig(
+                modelPath = modelPath,
+                backend = Backend.CPU(),
+                visionBackend = Backend.CPU(),
+                audioBackend = Backend.CPU()
+            )
             Engine(cpuConfig).also { it.initialize() }
         }
 
@@ -83,6 +93,9 @@ class InferenceModel private constructor(context: Context, modelFile: String) {
         var firstTokenTime = 0L
         var tokenCount = 0
 
+        if (imageBytes != null) Log.i(TAG, "이미지 첨부: ${imageBytes.size} bytes")
+        if (audioBytes != null) Log.i(TAG, "오디오 첨부: ${audioBytes.size} bytes")
+
         val flow = if (imageBytes != null || audioBytes != null) {
             val contentList = mutableListOf<Content>()
             imageBytes?.let { contentList.add(Content.ImageBytes(it)) }
@@ -106,6 +119,7 @@ class InferenceModel private constructor(context: Context, modelFile: String) {
                 }
                 tokenCount++
                 if (text.isNotEmpty()) {
+                    Log.d(TAG, "토큰[$tokenCount]: $text")
                     onPartialResult(text)
                 }
             }

@@ -3,7 +3,7 @@ package com.example.gemma4
 import android.content.Context
 
 data class ChatSettings(
-    val systemPrompt: String = "You are a helpful assistant.\nAlways respond in Korean.\nAnswer concisely and accurately.",
+    val systemPrompt: String = "You are a helpful multimodal assistant.\nAlways respond in Korean.\nAnswer concisely and accurately.\nWhen audio is provided, you can hear the speech. Transcribe or respond to the audio content directly.",
     val maxTokens: Int = 1024
 ) {
     companion object {
